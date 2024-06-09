@@ -1,5 +1,7 @@
 package it.unisa.control;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.io.IOException;
 import java.sql.SQLException;
 
@@ -30,15 +32,18 @@ public class LoginServlet extends HttpServlet {
 		
 		try
 		{	    
+			
+			 String username = request.getParameter("un");
+	            String password = request.getParameter("pw");
+	            
+	            // Codifica la password in SHA-512
+	            String encodedPassword = encodeSHA512(password);
+	            UserDao userDao = new UserDao();
+	            
+	            UserBean user = userDao.doRetrieve(username, encodedPassword);
 
-		     UserBean user = new UserBean();
-		     user.setUsername(request.getParameter("un"));
-		     user.setPassword(request.getParameter("pw"));
-		     user = usDao.doRetrieve(request.getParameter("un"),request.getParameter("pw"));
-			   		    
-		    
-		     String checkout = request.getParameter("checkout");
-		     
+	            String checkout = request.getParameter("checkout");
+	            
 		     if (user.isValid())
 		     {
 			        
@@ -60,4 +65,22 @@ public class LoginServlet extends HttpServlet {
 			System.out.println("Error:" + e.getMessage());
 		}
 		  }
+	
+	private String encodeSHA512(String password) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-512");
+            byte[] digest = md.digest(password.getBytes());
+            
+            // Converti il byte array in una rappresentazione esadecimale
+            StringBuilder hexString = new StringBuilder();
+            for (int i = 0; i < digest.length; i++) {
+                hexString.append(Integer.toHexString(0xFF & digest[i]));
+            }
+            
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 	}
